@@ -1,4 +1,4 @@
-export const DEFAULT_MARKET_SEARCH_ENDPOINT = 'https://cdn.jsdmirror.com/gh/shangxueink/koishi-registry-aggregator@gh-pages/market.json'
+export const DEFAULT_MARKET_SEARCH_ENDPOINT = 'https://sh-aliyun2.vincentzyu233.cn/koishi-market-proxy/market'
 
 /**
  * 获取当前设置的 endpoint
