@@ -110,7 +110,7 @@
         "title" : "koishi-market",
         "router" : {
             "mode" : "hash",
-            "base" : "/uniapp-koishi-market/"
+            "base" : "/market/"
         }
     },
     "locale" : "zh-Hans"
