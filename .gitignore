@@ -1,5 +1,10 @@
 /.vscode/
 
 /unpackage/
+!/unpackage/dist/
+/unpackage/dist/*
+!/unpackage/dist/build/
+/unpackage/dist/build/*
+!/unpackage/dist/build/web/
 
 /node_modules/

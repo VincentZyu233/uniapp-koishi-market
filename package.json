@@ -11,5 +11,12 @@
   "scripts": {
     "dev:h5": "uni --type h5 --watch",
     "build:h5": "uni build -p h5"
+  },
+  "devDependencies": {
+    "@dcloudio/uni-cli-shared": "^2.0.2-4080720251210002",
+    "@dcloudio/vite-plugin-uni": "^3.0.0-alpha-3000020210521001",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vue/compiler-sfc": "^3.5.25",
+    "vite": "^7.2.7"
   }
 }
