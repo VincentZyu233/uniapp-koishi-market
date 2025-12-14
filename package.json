@@ -1,0 +1,14 @@
+{
+  "name": "uniapp-koishi-market",
+  "version": "0.0.1-alpha2",
+  "main": "index.js",
+  "repository": "https://gitee.com/vincent-zyu/uniapp-qsfrontend",
+  "author": "VincentZyu <1830540513@qq.com>",
+  "license": "MIT",
+  "dependencies": {
+    "marked": "^15.0.8"
+  },
+  "scripts": {
+    "dev:h5": "uni --type h5 --watch"
+  }
+}
