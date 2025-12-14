@@ -8,19 +8,19 @@
 				@clear="handleClearSearch"
 			/>
 			
-			<!-- 市场信息 -->
-			<view class="market-info" v-if="marketInfo && marketInfo.mirror">
-				<view class="info-tag">
-					<text class="info-icon">🌐</text>
-					<text class="info-label">镜像源:</text>
-					<text class="info-value">{{ marketInfo.mirror }}</text>
-				</view>
-				<view class="info-tag">
-					<text class="info-icon">📦</text>
-					<text class="info-label">插件总数:</text>
-					<text class="info-value">{{ marketInfo.total }}</text>
-				</view>
+		<!-- 市场信息 -->
+		<view class="market-info" v-if="marketInfo && marketInfo.total">
+			<view class="info-tag">
+				<text class="info-icon">🌐</text>
+				<text class="info-label">当前源:</text>
+				<text class="info-value">{{ currentSourceUrl }}</text>
 			</view>
+			<view class="info-tag">
+				<text class="info-icon">📦</text>
+				<text class="info-label">插件总数:</text>
+				<text class="info-value">{{ marketInfo.total }}</text>
+			</view>
+		</view>
 		</view>
 		
 		<!-- 主体内容区域 -->
@@ -112,7 +112,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { fetchMarketData } from '@/utils/request.js'
+import { fetchMarketData, getCurrentEndpoint } from '@/utils/request.js'
 import PluginCard from '@/components/plugin-card/plugin-card.vue'
 import MarketSidebar from '@/components/market-sidebar/market-sidebar.vue'
 import SearchHeader from '@/components/search-header/search-header.vue'
@@ -129,6 +129,9 @@ const isDarkMode = ref(true)
 // 加载状态
 const isLoading = ref(false)
 const loadError = ref(null)
+
+// 当前使用的源 URL
+const currentSourceUrl = computed(() => getCurrentEndpoint())
 
 // 排序相关
 const activeSort = ref('default')
