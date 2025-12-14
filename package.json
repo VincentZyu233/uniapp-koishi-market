@@ -9,6 +9,7 @@
     "marked": "^15.0.8"
   },
   "scripts": {
-    "dev:h5": "uni --type h5 --watch"
+    "dev:h5": "uni --type h5 --watch",
+    "build:h5": "uni build -p h5"
   }
 }
