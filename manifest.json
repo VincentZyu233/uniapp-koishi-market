@@ -128,7 +128,7 @@
         "title" : "koishi-market",
         "router" : {
             "mode" : "hash",
-            "base" : "/market/"
+            "base" : "/uniapp-koishi-market/"
         },
         "uniStatistics" : {
             "enable" : false
