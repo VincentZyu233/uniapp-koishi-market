@@ -6,5 +6,6 @@
 !/unpackage/dist/build/
 /unpackage/dist/build/*
 !/unpackage/dist/build/web/
+!/unpackage/dist/build/web/**
 
 /node_modules/
