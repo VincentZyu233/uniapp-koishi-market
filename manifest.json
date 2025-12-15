@@ -2,8 +2,8 @@
     "name" : "uniapp-mp-qwq-server-frontend",
     "appid" : "__UNI__850E479",
     "description" : "qwq拨无因果的神秘小服服",
-    "versionName" : "0.0.1-alpha2",
-    "versionCode" : 20251214,
+    "versionName" : "0.1.0-alpha1",
+    "versionCode" : 20251215,
     "transformPx" : false,
     /* 5+App特有相关 */
     "app-plus" : {

@@ -8,4 +8,5 @@ git add -f unpackage/dist/build/web/
 git status --short
 git commit -m "qwq"
 git push github main
+git push origin main
 ```

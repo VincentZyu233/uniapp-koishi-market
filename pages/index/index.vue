@@ -492,7 +492,7 @@ const calculatePageSize = () => {
 	// 内容区 padding：60rpx (约30px) × 2 = 60px
 	const cardWidth = 336 + 12 // 卡片宽度 + gap的一半
 	const sidebarWidth = sidebarCollapsed.value ? 80 : 280
-	const contentPadding = 60
+	const contentPadding = 50
 	
 	// 可用宽度 = 窗口宽度 - 侧边栏 - padding
 	const availableWidth = systemInfo.windowWidth - sidebarWidth - contentPadding
@@ -532,12 +532,16 @@ onMounted(() => {
 	
 	// 计算每页显示数量
 	calculatePageSize()
+
+	// #ifdef WEB
 	
 	// 监听窗口大小变化
 	window.addEventListener('resize', calculatePageSize)
 	
 	// 添加键盘事件监听
 	window.addEventListener('keydown', handleKeyDown)
+
+	// #endif
 	
 	loadPlugins()
 })
@@ -581,14 +585,17 @@ onUnmounted(() => {
 
 /* 顶部区域 */
 .top-section {
-	background-color: var(--bg-primary);
+	background: rgba(13, 17, 23, 0.08);
+	backdrop-filter: blur(10rpx) saturate(180%);
+	-webkit-backdrop-filter: blur(10rpx) saturate(180%);
+	border-bottom: 1rpx solid rgba(48, 54, 61, 0.08);
 }
 
 /* 市场信息 */
 .market-info {
 	display: flex;
-	gap: 24rpx;
-	padding: 16rpx 60rpx;
+	gap: 9rpx;
+	padding: 9rpx 50rpx;
 	flex-wrap: wrap;
 	align-items: center;
 }
@@ -597,9 +604,9 @@ onUnmounted(() => {
 	display: inline-flex;
 	align-items: center;
 	gap: 8rpx;
-	padding: 12rpx 24rpx;
-	background-color: var(--bg-secondary);
-	border: 2rpx solid var(--border-color);
+	padding: 9rpx 13rpx;
+	background-color: rgba(22, 27, 34, 0.15);
+	border: 2rpx solid rgba(48, 54, 61, 0.15);
 	border-radius: 20rpx;
 	font-size: 24rpx;
 	white-space: nowrap;
@@ -617,6 +624,14 @@ onUnmounted(() => {
 .info-value {
 	color: var(--primary-color);
 	font-weight: 600;
+}
+
+.info-tag:first-child .info-value {
+	font-size: 20rpx;
+	max-width: 400rpx;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* 搜索结果高亮 */
@@ -667,13 +682,18 @@ onUnmounted(() => {
 
 /* 浅色模式下的玻璃效果覆盖 */
 .market-page:not(.dark-mode) .result-header {
-	background: linear-gradient(
-		to bottom,
-		rgba(255, 255, 255, 0.3) 0%,
-		rgba(255, 255, 255, 0.15) 50%,
-		rgba(255, 255, 255, 0) 100%
-	);
-	border-bottom-color: rgba(208, 215, 222, 0.15);
+	background: rgba(255, 255, 255, 0.12);
+	border-bottom-color: rgba(208, 215, 222, 0.08);
+}
+
+.market-page:not(.dark-mode) .top-section {
+	background: rgba(255, 255, 255, 0.12);
+	border-bottom-color: rgba(208, 215, 222, 0.08);
+}
+
+.market-page:not(.dark-mode) .info-tag {
+	background-color: rgba(248, 248, 249, 0.2);
+	border-color: rgba(208, 215, 222, 0.15);
 }
 
 /* 黑暗模式下的按钮玻璃效果 */
@@ -689,8 +709,8 @@ onUnmounted(() => {
 
 /* 搜索区域包装 */
 ::v-deep .search-header {
-	padding: 64rpx 60rpx 0;
-	background-color: var(--bg-primary);
+	padding: 60rpx 60rpx 0;
+	background: transparent;
 }
 
 /* 主体内容 */
@@ -728,54 +748,55 @@ onUnmounted(() => {
 	transition: all 0.3s;
 	overflow: hidden;
 	min-width: 0;
+	position: relative;
 }
 
 .result-header {
-	padding: 24rpx 60rpx;
-	/* 渐变半透明玻璃效果 - 从上到下逐渐透明 */
-	background: linear-gradient(
-		to bottom,
-		rgba(13, 17, 23, 0.3) 0%,
-		rgba(13, 17, 23, 0.15) 50%,
-		rgba(13, 17, 23, 0) 100%
-	);
-	backdrop-filter: blur(40rpx) saturate(200%);
-	-webkit-backdrop-filter: blur(40rpx) saturate(200%);
-	border-bottom: 1rpx solid rgba(48, 54, 61, 0.15);
+	padding: 8rpx 30rpx;
+	/* 半透明玻璃效果 */
+	background: rgba(13, 17, 23, 0.08);
+	backdrop-filter: blur(10rpx) saturate(180%);
+	-webkit-backdrop-filter: blur(10rpx) saturate(180%);
+	border-bottom: 1rpx solid rgba(48, 54, 61, 0.08);
 	display: flex;
-	justify-content: flex-end;
+	justify-content: center;
 	align-items: center;
 	flex-shrink: 0;
-	position: relative;
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
 	z-index: 10;
 }
 
 .header-actions {
 	display: flex;
-	gap: 20rpx;
+	flex-direction: column;
+	gap: 6rpx;
 	align-items: center;
 	width: 100%;
-	justify-content: space-between;
 }
 
 /* 翻页按钮组 */
 .pagination-actions {
 	display: flex;
-	gap: 12rpx;
+	gap: 8rpx;
+	width: 100%;
+	justify-content: center;
 }
 
 .page-nav-btn {
 	display: flex;
 	align-items: center;
-	gap: 8rpx;
-	padding: 12rpx 24rpx;
+	gap: 6rpx;
+	padding: 8rpx 20rpx;
 	background-color: rgba(124, 107, 206, 0.15);
-	backdrop-filter: blur(20rpx);
-	-webkit-backdrop-filter: blur(20rpx);
+	backdrop-filter: blur(10rpx);
+	-webkit-backdrop-filter: blur(10rpx);
 	color: var(--text-primary);
 	border: 2rpx solid rgba(124, 107, 206, 0.3);
-	border-radius: 24rpx;
-	font-size: 26rpx;
+	border-radius: 20rpx;
+	font-size: 24rpx;
 	transition: all 0.3s ease;
 	cursor: pointer;
 	font-weight: 500;
@@ -805,20 +826,22 @@ onUnmounted(() => {
 /* 功能按钮组 */
 .function-actions {
 	display: flex;
-	gap: 20rpx;
+	gap: 8rpx;
+	width: 100%;
+	justify-content: center;
 }
 
 .settings-btn {
 	display: flex;
 	align-items: center;
-	padding: 12rpx 28rpx;
+	padding: 8rpx 20rpx;
 	background-color: rgba(248, 248, 249, 0.2);
-	backdrop-filter: blur(20rpx);
-	-webkit-backdrop-filter: blur(20rpx);
+	backdrop-filter: blur(10rpx);
+	-webkit-backdrop-filter: blur(10rpx);
 	color: var(--text-primary);
 	border: 2rpx solid rgba(208, 215, 222, 0.3);
-	border-radius: 24rpx;
-	font-size: 26rpx;
+	border-radius: 20rpx;
+	font-size: 24rpx;
 	transition: all 0.3s ease;
 	cursor: pointer;
 	font-weight: 500;
@@ -842,14 +865,14 @@ onUnmounted(() => {
 .theme-toggle-btn {
 	display: flex;
 	align-items: center;
-	padding: 12rpx 28rpx;
+	padding: 8rpx 20rpx;
 	background-color: rgba(248, 248, 249, 0.2);
-	backdrop-filter: blur(20rpx);
-	-webkit-backdrop-filter: blur(20rpx);
+	backdrop-filter: blur(10rpx);
+	-webkit-backdrop-filter: blur(10rpx);
 	color: var(--text-primary);
 	border: 2rpx solid rgba(208, 215, 222, 0.3);
-	border-radius: 24rpx;
-	font-size: 26rpx;
+	border-radius: 20rpx;
+	font-size: 24rpx;
 	transition: all 0.3s ease;
 	cursor: pointer;
 	font-weight: 500;
@@ -873,10 +896,10 @@ onUnmounted(() => {
 .refresh-btn {
 	display: flex;
 	align-items: center;
-	padding: 10rpx 24rpx;
+	padding: 8rpx 20rpx;
 	background-color: rgba(64, 158, 255, 0.5);
-	backdrop-filter: blur(20rpx);
-	-webkit-backdrop-filter: blur(20rpx);
+	backdrop-filter: blur(10rpx);
+	-webkit-backdrop-filter: blur(10rpx);
 	color: #fff;
 	border-radius: 20rpx;
 	font-size: 24rpx;
@@ -943,7 +966,7 @@ onUnmounted(() => {
 
 .plugin-scroll {
 	flex: 1;
-	padding: 30rpx;
+	padding: 100rpx 30rpx 30rpx 30rpx;
 	overflow-x: hidden;
 	width: 100%;
 	box-sizing: border-box;
@@ -1078,14 +1101,8 @@ onUnmounted(() => {
 	}
 	
 	.result-header {
-		padding: 20rpx;
+		padding: 10rpx;
 		justify-content: center;
-	}
-	
-	.header-actions {
-		flex-direction: column;
-		width: 100%;
-		gap: 16rpx;
 	}
 	
 	/* 手机端翻页按钮在上方 */
@@ -1112,7 +1129,7 @@ onUnmounted(() => {
 	.function-actions {
 		width: 100%;
 		order: 2;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: 12rpx;
 		justify-content: space-between;
 	}
@@ -1120,7 +1137,7 @@ onUnmounted(() => {
 	.settings-btn,
 	.theme-toggle-btn,
 	.refresh-btn {
-		flex: 1 1 calc(33.333% - 8rpx);
+		flex: 1;
 		min-width: 0;
 		justify-content: center;
 		padding: 16rpx 12rpx;

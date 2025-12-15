@@ -31,7 +31,7 @@
 		</view>
 		
 		<!-- 描述 -->
-		<view class="card-description" @click.stop="handleDescriptionClick">
+		<view class="card-description">
 			<rich-text-parser 
 				:text="plugin.description || ''"
 				:parse-images="true"
@@ -195,20 +195,7 @@ const handleClick = () => {
 	emit('click', props.plugin)
 }
 
-// 处理描述区域点击，如果点击的是链接，不触发卡片点击
-const handleDescriptionClick = (e) => {
-	// 检查点击目标是否是链接元素
-	const target = e.target;
-	if (target && target.className) {
-		const className = typeof target.className === 'string' ? target.className : '';
-		if (className.includes('link-')) {
-			// 点击的是链接，不触发卡片点击
-			console.log('点击了链接，阻止冒泡');
-			e.stopPropagation();
-			return;
-		}
-	}
-}
+
 </script>
 
 <style scoped>
@@ -217,7 +204,7 @@ const handleDescriptionClick = (e) => {
 	height: 468rpx;
 	background-color: var(--bg-secondary, #fff);
 	border-radius: 12rpx;
-	padding: 32rpx 40rpx;
+	padding: 30rpx 27rpx;
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
