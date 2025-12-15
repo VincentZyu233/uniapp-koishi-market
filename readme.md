@@ -1,6 +1,13 @@
 ### github page
 https://vincentzyu233.github.io/uniapp-koishi-market/#/
 
+#### made by uniapp:
+https://uniapp.dcloud.net.cn/
+
+#### repo url:
+https://github.com/VincentZyu233/uniapp-koishi-market
+https://gitee.com/vincent-zyu/uniapp-koishi-market
+
 ### github action
 ```shell
 git add .

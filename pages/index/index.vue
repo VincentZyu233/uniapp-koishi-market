@@ -1,5 +1,14 @@
 <template>
 	<view class="market-page" :class="{ 'dark-mode': isDarkMode }">
+		<!-- GitHub 链接 -->
+		<view class="github-link" @click="openGithub">
+			<image 
+				class="github-icon" 
+				:src="isDarkMode ? '/static/github-mark-white.png' : '/static/github-mark.png'"
+				mode="aspectFit"
+			/>
+		</view>
+		
 		<!-- 顶部搜索栏和信息栏 -->
 		<view class="top-section">
 			<search-header 
@@ -365,6 +374,24 @@ const goToSettings = () => {
 	})
 }
 
+const openGithub = () => {
+	// #ifdef H5
+	window.open('https://github.com/VincentZyu233/uniapp-koishi-market', '_blank')
+	// #endif
+	
+	// #ifndef H5
+	uni.setClipboardData({
+		data: 'https://github.com/VincentZyu233/uniapp-koishi-market',
+		success: () => {
+			uni.showToast({
+				title: 'GitHub 链接已复制',
+				icon: 'success'
+			})
+		}
+	})
+	// #endif
+}
+
 const prevPage = () => {
 	if (currentPage.value > 1) {
 		currentPage.value--
@@ -554,6 +581,38 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+/* GitHub 链接 */
+.github-link {
+	position: fixed;
+	top: 20rpx;
+	right: 20rpx;
+	width: 64rpx;
+	height: 64rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(255, 255, 255, 0.08);
+	backdrop-filter: blur(10rpx) saturate(180%);
+	-webkit-backdrop-filter: blur(10rpx) saturate(180%);
+	border: 2rpx solid rgba(255, 255, 255, 0.1);
+	border-radius: 50%;
+	cursor: pointer;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	z-index: 999;
+}
+
+.github-link:hover {
+	transform: scale(1.1) rotate(360deg);
+	background: rgba(255, 255, 255, 0.15);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+.github-icon {
+	width: 40rpx;
+	height: 40rpx;
+	transition: transform 0.3s ease;
+}
+
 /* CSS变量 - 浅色模式 */
 .market-page {
 	width: 100vw;
@@ -1058,6 +1117,18 @@ onUnmounted(() => {
 
 /* 响应式布局 */
 @media (max-width: 768rpx) {
+	.github-link {
+		top: 15rpx;
+		right: 15rpx;
+		width: 56rpx;
+		height: 56rpx;
+	}
+	
+	.github-icon {
+		width: 34rpx;
+		height: 34rpx;
+	}
+	
 	.top-section {
 		position: sticky;
 		top: 0;
