@@ -23,24 +23,24 @@
 <style>
 	/*每个页面公共css */
 	
-	/* 引入霞鹜文楷等宽字体 */
+	/* 引入霞鹜文楷等宽字体 - 使用在线字体 */
 	@font-face {
 		font-family: 'LXGWWenKaiMono';
-		src: url('/static/fonts/LXGWWenKaiMono-Light.ttf') format('truetype');
+		src: url('https://gitee.com/vincent-zyu/uniapp-koishi-market/releases/download/fonts/LXGWWenKaiMono-Light.ttf') format('truetype');
 		font-weight: 300;
 		font-style: normal;
 	}
 	
 	@font-face {
 		font-family: 'LXGWWenKaiMono';
-		src: url('/static/fonts/LXGWWenKaiMono-Regular.ttf') format('truetype');
+		src: url('https://gitee.com/vincent-zyu/uniapp-koishi-market/releases/download/fonts/LXGWWenKaiMono-Regular.ttf') format('truetype');
 		font-weight: 400;
 		font-style: normal;
 	}
 	
 	@font-face {
 		font-family: 'LXGWWenKaiMono';
-		src: url('/static/fonts/LXGWWenKaiMono-Medium.ttf') format('truetype');
+		src: url('https://gitee.com/vincent-zyu/uniapp-koishi-market/releases/download/fonts/LXGWWenKaiMono-Medium.ttf') format('truetype');
 		font-weight: 500;
 		font-style: normal;
 	}
