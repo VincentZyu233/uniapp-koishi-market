@@ -132,7 +132,16 @@
         },
         "uniStatistics" : {
             "enable" : false
-        }
+        },
+        "devServer" : {
+            "port" : 8080
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
+        },
+        "template" : "index.html"
     },
     "locale" : "zh-Hans",
     "app-harmony" : {

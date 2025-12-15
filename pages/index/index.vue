@@ -159,7 +159,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { fetchMarketData, getCurrentEndpoint } from '@/utils/request.js'
 import PluginCard from '@/components/plugin-card/plugin-card.vue'
 import MarketSidebar from '@/components/market-sidebar/market-sidebar.vue'
@@ -224,6 +224,7 @@ const plugins = ref([])
 const marketInfo = ref({})
 const currentPage = ref(1)
 const pageSize = ref(24) // 初始值，将根据视口高度动态调整
+const gridColumns = ref(4) // 当前 grid 列数
 
 // 计算属性
 const filteredPlugins = computed(() => {
@@ -319,13 +320,17 @@ const toggleTheme = () => {
 const handleSearch = (word) => {
 	currentPage.value = 1
 	// 重置滚动位置
-	scrollTop.value = Math.random() // 使用随机数触发更新
+	nextTick(() => {
+		scrollTop.value = Math.random() // 使用随机数触发更新
+	})
 }
 
 const handleClearSearch = () => {
 	currentPage.value = 1
 	// 重置滚动位置
-	scrollTop.value = Math.random() // 使用随机数触发更新
+	nextTick(() => {
+		scrollTop.value = Math.random() // 使用随机数触发更新
+	})
 }
 
 const toggleSort = (key) => {
@@ -336,7 +341,9 @@ const toggleSort = (key) => {
 		sortOrder.value = 'desc'
 	}
 	currentPage.value = 1
-	scrollTop.value = Math.random()
+	nextTick(() => {
+		scrollTop.value = Math.random()
+	})
 }
 
 const toggleBadge = (key) => {
@@ -347,7 +354,9 @@ const toggleBadge = (key) => {
 		activeBadges.value.push(key)
 	}
 	currentPage.value = 1
-	scrollTop.value = Math.random()
+	nextTick(() => {
+		scrollTop.value = Math.random()
+	})
 }
 
 const toggleCategory = (key) => {
@@ -357,7 +366,9 @@ const toggleCategory = (key) => {
 		activeCategory.value = key
 	}
 	currentPage.value = 1
-	scrollTop.value = Math.random()
+	nextTick(() => {
+		scrollTop.value = Math.random()
+	})
 }
 
 const openPlugin = (plugin) => {
@@ -395,14 +406,18 @@ const openGithub = () => {
 const prevPage = () => {
 	if (currentPage.value > 1) {
 		currentPage.value--
-		scrollTop.value = Math.random()
+		nextTick(() => {
+			scrollTop.value = Math.random()
+		})
 	}
 }
 
 const nextPage = () => {
 	if (currentPage.value < totalPages.value) {
 		currentPage.value++
-		scrollTop.value = Math.random()
+		nextTick(() => {
+			scrollTop.value = Math.random()
+		})
 	}
 }
 
@@ -527,8 +542,8 @@ const calculatePageSize = () => {
 	// 计算实际能容纳的列数
 	const columnsPerRow = Math.floor(availableWidth / cardWidth)
 	
-	// 限制列数范围 1-5
-	const actualColumns = Math.max(1, Math.min(5, columnsPerRow))
+	// 限制列数范围 1-9
+	const actualColumns = Math.max(1, Math.min(9, columnsPerRow))
 	
 	// 固定5行
 	const fixedRows = 5
@@ -548,6 +563,7 @@ const calculatePageSize = () => {
 	console.log('======================')
 	
 	pageSize.value = newPageSize
+	gridColumns.value = actualColumns
 }
 
 onMounted(() => {
@@ -1033,9 +1049,10 @@ onUnmounted(() => {
 
 .plugin-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(336px, 1fr));
+	grid-template-columns: repeat(v-bind(gridColumns), 336px);
 	gap: 24rpx;
 	width: 100%;
+	justify-content: center;
 }
 
 /* 空状态 */
