@@ -31,8 +31,13 @@
 		</view>
 		
 		<!-- 描述 -->
-		<view class="card-description">
-			{{ plugin.description }}
+		<view class="card-description" @click.stop="handleDescriptionClick">
+			<rich-text-parser 
+				:text="plugin.description || ''"
+				:parse-images="true"
+				:parse-links="true"
+				:show-full-url="false"
+			/>
 		</view>
 		
 		<!-- 底部：版本、大小、下载量、作者 -->
@@ -52,17 +57,25 @@
 				<text class="footer-text">{{ plugin.downloads }}</text>
 			</view>
 			
-			<view class="spacer"></view>
-			
-			<view class="author-avatar">
-				<text class="avatar-text">{{ getAvatarText(plugin.author) }}</text>
-			</view>
+		<view class="spacer"></view>
+		
+		<view class="author-avatar" v-if="authorEmail">
+			<image 
+				class="avatar-img" 
+				:src="getAvatarUrl(authorEmail)"
+				mode="aspectFill"
+				@error="handleAvatarError"
+			/>
+		</view>
+		<view class="author-avatar" v-else>
+			<text class="avatar-text">{{ getAvatarText(plugin.author) }}</text>
 		</view>
 	</view>
-</template>
-
-<script setup>
-import { computed } from 'vue'
+</view>
+</template><script setup>
+import { computed, ref } from 'vue'
+import RichTextParser from '@/components/rich-text-parser/rich-text-parser.vue'
+import { simpleMd5 } from '@/utils/md5.js'
 
 const props = defineProps({
 	plugin: {
@@ -72,6 +85,48 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['click'])
+
+const avatarError = ref(false)
+
+// 获取作者邮箱
+const authorEmail = computed(() => {
+	if (avatarError.value) return null
+	
+	const plugin = props.plugin
+	
+	// 优先从 _raw.package.publisher 获取
+	if (plugin._raw?.package?.publisher?.email) {
+		return plugin._raw.package.publisher.email
+	}
+	
+	// 从 _raw.package.maintainers 获取
+	if (plugin._raw?.package?.maintainers?.length > 0) {
+		const email = plugin._raw.package.maintainers[0].email
+		if (email) return email
+	}
+	
+	// 兼容旧格式：从 package.publisher 获取
+	if (plugin.package?.publisher?.email) {
+		return plugin.package.publisher.email
+	}
+	
+	return null
+})
+
+// 获取 Gravatar 头像 URL
+const getAvatarUrl = (email) => {
+	if (!email) return ''
+	// 使用 Gravatar 服务
+	// d=identicon 会生成几何图案作为默认头像
+	// s=48 指定大小为 48x48 像素
+	const hash = simpleMd5(email.toLowerCase().trim())
+	return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=96`
+}
+
+// 处理头像加载错误
+const handleAvatarError = () => {
+	avatarError.value = true
+}
 
 // 获取插件徽章
 const badge = computed(() => {
@@ -139,12 +194,27 @@ const getAvatarText = (author) => {
 const handleClick = () => {
 	emit('click', props.plugin)
 }
+
+// 处理描述区域点击，如果点击的是链接，不触发卡片点击
+const handleDescriptionClick = (e) => {
+	// 检查点击目标是否是链接元素
+	const target = e.target;
+	if (target && target.className) {
+		const className = typeof target.className === 'string' ? target.className : '';
+		if (className.includes('link-')) {
+			// 点击的是链接，不触发卡片点击
+			console.log('点击了链接，阻止冒泡');
+			e.stopPropagation();
+			return;
+		}
+	}
+}
 </script>
 
 <style scoped>
 .plugin-card {
 	width: 100%;
-	min-height: 400rpx;
+	height: 468rpx;
 	background-color: var(--bg-secondary, #fff);
 	border-radius: 12rpx;
 	padding: 32rpx 40rpx;
@@ -152,13 +222,14 @@ const handleClick = () => {
 	display: flex;
 	flex-direction: column;
 	gap: 24rpx;
-	transition: all 0.3s ease;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	box-shadow: 0 0 0 2rpx transparent inset;
 	cursor: pointer;
 }
 
 .plugin-card:hover {
-	box-shadow: 0 0 0 2rpx var(--primary-color, #5546a3) inset;
+	box-shadow: 0 0 0 2rpx var(--primary-color, #5546a3) inset, 0 8rpx 24rpx rgba(85, 70, 163, 0.15);
+	transform: translateY(-4rpx) scale(1.01);
 }
 
 /* 头部 */
@@ -299,10 +370,11 @@ const handleClick = () => {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	display: -webkit-box;
-	-webkit-line-clamp: 3;
+	-webkit-line-clamp: 4;
 	-webkit-box-orient: vertical;
 	word-break: break-word;
 	margin: 0;
+	min-height: 0;
 }
 
 /* 底部 */
@@ -357,6 +429,13 @@ const handleClick = () => {
 	flex-shrink: 0;
 	cursor: pointer;
 	vertical-align: middle;
+	overflow: hidden;
+}
+
+.avatar-img {
+	width: 100%;
+	height: 100%;
+	border-radius: 50%;
 }
 
 .avatar-text {

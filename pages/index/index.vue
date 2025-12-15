@@ -3,7 +3,8 @@
 		<!-- 顶部搜索栏和信息栏 -->
 		<view class="top-section">
 			<search-header 
-				v-model="searchWords"
+				:model-value="searchWords"
+				@update:model-value="searchWords = $event"
 				@search="handleSearch"
 				@clear="handleClearSearch"
 			/>
@@ -19,6 +20,11 @@
 				<text class="info-icon">📦</text>
 				<text class="info-label">插件总数:</text>
 				<text class="info-value">{{ marketInfo.total }}</text>
+			</view>
+			<view class="info-tag" v-if="searchWords.length > 0" :class="{ 'search-result': true }">
+				<text class="info-icon">🔍</text>
+				<text class="info-label">搜索结果:</text>
+				<text class="info-value highlight">{{ filteredPlugins.length }}</text>
 			</view>
 		</view>
 		</view>
@@ -54,17 +60,40 @@
 			<!-- 操作按钮 -->
 			<view class="result-header">
 				<view class="header-actions">
-					<view class="settings-btn" @click="goToSettings">
-						<text class="settings-icon">⚙️</text>
-						<text class="settings-text">设置</text>
+					<!-- 翻页按钮组 -->
+					<view class="pagination-actions">
+						<view 
+							class="page-nav-btn prev-btn" 
+							:class="{ disabled: currentPage === 1 }"
+							@click="prevPage"
+						>
+							<text class="page-nav-icon">←</text>
+							<text class="page-nav-text">上一页</text>
+						</view>
+						<view 
+							class="page-nav-btn next-btn"
+							:class="{ disabled: currentPage === totalPages }"
+							@click="nextPage"
+						>
+							<text class="page-nav-text">下一页</text>
+							<text class="page-nav-icon">→</text>
+						</view>
 					</view>
-					<view class="theme-toggle-btn" @click="toggleTheme">
-						<text class="theme-icon">{{ isDarkMode ? '☀️' : '🌙' }}</text>
-						<text class="theme-text">{{ isDarkMode ? '浅色' : '深色' }}</text>
-					</view>
-					<view class="refresh-btn" @click="refreshPlugins" :class="{ loading: isLoading }">
-						<text class="refresh-icon">🔄</text>
-						<text class="refresh-text">{{ isLoading ? '加载中...' : '刷新' }}</text>
+					
+					<!-- 功能按钮组 -->
+					<view class="function-actions">
+						<view class="settings-btn" @click="goToSettings">
+							<text class="settings-icon">⚙️</text>
+							<text class="settings-text">设置</text>
+						</view>
+						<view class="theme-toggle-btn" @click="toggleTheme">
+							<text class="theme-icon">{{ isDarkMode ? '☀️' : '🌙' }}</text>
+							<text class="theme-text">{{ isDarkMode ? '浅色' : '深色' }}</text>
+						</view>
+						<view class="refresh-btn" @click="refreshPlugins" :class="{ loading: isLoading }">
+							<text class="refresh-icon">🔄</text>
+							<text class="refresh-text">{{ isLoading ? '加载中...' : '刷新' }}</text>
+						</view>
 					</view>
 				</view>
 			</view>				<!-- 加载状态 -->
@@ -73,18 +102,22 @@
 					<text class="loading-text">正在加载插件数据...</text>
 				</view>
 				
-				<!-- 插件卡片列表 -->
-				<scroll-view class="plugin-scroll" scroll-y v-else>
-					<view class="plugin-grid">
-						<plugin-card
-							v-for="plugin in paginatedPlugins" 
-							:key="plugin.id"
-							:plugin="plugin"
-							@click="openPlugin"
-						/>
-					</view>
-					
-					<!-- 空状态 -->
+			<!-- 插件卡片列表 -->
+			<scroll-view 
+				id="plugin-scroll-view"
+				class="plugin-scroll" 
+				scroll-y 
+				:scroll-top="scrollTop"
+				v-else
+			>
+				<view class="plugin-grid">
+					<plugin-card
+						v-for="plugin in paginatedPlugins" 
+						:key="plugin.id"
+						:plugin="plugin"
+						@click="openPlugin"
+					/>
+				</view>					<!-- 空状态 -->
 					<view v-if="filteredPlugins.length === 0" class="empty-state">
 						<text class="empty-icon">📦</text>
 						<text class="empty-text">没有找到相关插件</text>
@@ -92,17 +125,23 @@
 					
 					<!-- 分页 -->
 					<view v-if="totalPages > 1" class="pagination">
-						<view 
-							class="page-btn" 
-							:class="{ disabled: currentPage === 1 }"
-							@click="prevPage"
-						>上一页</view>
+						<view class="pagination-group">
+							<view 
+								class="page-btn" 
+								:class="{ disabled: currentPage === 1 }"
+								@click="prevPage"
+							>上一页</view>
+							<view class="page-hint">← ↑ PgUp</view>
+						</view>
 						<view class="page-info">{{ currentPage }} / {{ totalPages }}</view>
-						<view 
-							class="page-btn"
-							:class="{ disabled: currentPage === totalPages }"
-							@click="nextPage"
-						>下一页</view>
+						<view class="pagination-group">
+							<view 
+								class="page-btn"
+								:class="{ disabled: currentPage === totalPages }"
+								@click="nextPage"
+							>下一页</view>
+							<view class="page-hint">→ ↓ PgDn</view>
+						</view>
 					</view>
 				</scroll-view>
 			</view>
@@ -111,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { fetchMarketData, getCurrentEndpoint } from '@/utils/request.js'
 import PluginCard from '@/components/plugin-card/plugin-card.vue'
 import MarketSidebar from '@/components/market-sidebar/market-sidebar.vue'
@@ -119,6 +158,9 @@ import SearchHeader from '@/components/search-header/search-header.vue'
 
 // 搜索相关
 const searchWords = ref([])
+
+// 滚动位置
+const scrollTop = ref(0)
 
 // 侧边栏状态
 const sidebarCollapsed = ref(false)
@@ -172,7 +214,7 @@ const categories = ref([
 const plugins = ref([])
 const marketInfo = ref({})
 const currentPage = ref(1)
-const pageSize = ref(24)
+const pageSize = ref(24) // 初始值，将根据视口高度动态调整
 
 // 计算属性
 const filteredPlugins = computed(() => {
@@ -183,9 +225,22 @@ const filteredPlugins = computed(() => {
 		result = result.filter(plugin => {
 			return searchWords.value.every(word => {
 				const lowerWord = word.toLowerCase()
-				return plugin.name.toLowerCase().includes(lowerWord) ||
-					   plugin.description.toLowerCase().includes(lowerWord) ||
-					   plugin.author.toLowerCase().includes(lowerWord)
+				const name = (plugin.name || plugin.shortname || '').toLowerCase()
+				
+				// 处理可能是对象的 description
+				let description = plugin.description || ''
+				if (typeof description === 'object') {
+					description = description['zh-CN'] || description['zh'] || description['en'] || ''
+				}
+				description = String(description).toLowerCase()
+				
+				const packageName = (plugin.package?.name || '').toLowerCase()
+				const author = (plugin.author || plugin.package?.publisher?.username || '').toLowerCase()
+				
+				return name.includes(lowerWord) ||
+					   description.includes(lowerWord) ||
+					   packageName.includes(lowerWord) ||
+					   author.includes(lowerWord)
 			})
 		})
 	}
@@ -254,10 +309,14 @@ const toggleTheme = () => {
 
 const handleSearch = (word) => {
 	currentPage.value = 1
+	// 重置滚动位置
+	scrollTop.value = Math.random() // 使用随机数触发更新
 }
 
 const handleClearSearch = () => {
 	currentPage.value = 1
+	// 重置滚动位置
+	scrollTop.value = Math.random() // 使用随机数触发更新
 }
 
 const toggleSort = (key) => {
@@ -268,6 +327,7 @@ const toggleSort = (key) => {
 		sortOrder.value = 'desc'
 	}
 	currentPage.value = 1
+	scrollTop.value = Math.random()
 }
 
 const toggleBadge = (key) => {
@@ -278,6 +338,7 @@ const toggleBadge = (key) => {
 		activeBadges.value.push(key)
 	}
 	currentPage.value = 1
+	scrollTop.value = Math.random()
 }
 
 const toggleCategory = (key) => {
@@ -287,6 +348,7 @@ const toggleCategory = (key) => {
 		activeCategory.value = key
 	}
 	currentPage.value = 1
+	scrollTop.value = Math.random()
 }
 
 const openPlugin = (plugin) => {
@@ -306,12 +368,28 @@ const goToSettings = () => {
 const prevPage = () => {
 	if (currentPage.value > 1) {
 		currentPage.value--
+		scrollTop.value = Math.random()
 	}
 }
 
 const nextPage = () => {
 	if (currentPage.value < totalPages.value) {
 		currentPage.value++
+		scrollTop.value = Math.random()
+	}
+}
+
+// 键盘快捷键处理
+const handleKeyDown = (e) => {
+	// 右箭头、下箭头、PageDown - 下一页
+	if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown') {
+		e.preventDefault()
+		nextPage()
+	}
+	// 左箭头、上箭头、PageUp - 上一页
+	else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+		e.preventDefault()
+		prevPage()
 	}
 }
 
@@ -333,6 +411,13 @@ const loadPlugins = async () => {
 		
 		// 设置插件列表
 		plugins.value = data.plugins || []
+		
+		// 调试：打印第一个插件的完整数据结构
+		if (plugins.value.length > 0) {
+			console.log('=== 第一个插件的数据结构 ===')
+			console.log(JSON.stringify(plugins.value[0], null, 2))
+			console.log('===========================')
+		}
 		
 		// 保存市场信息
 		marketInfo.value = {
@@ -397,6 +482,47 @@ const refreshPlugins = () => {
 	loadPlugins()
 }
 
+// 动态计算每页显示的插件数量
+const calculatePageSize = () => {
+	// 获取系统信息
+	const systemInfo = uni.getSystemInfoSync()
+	
+	// 卡片宽度：336px + gap: 24rpx (约12px) = 348px
+	// 侧边栏宽度：展开时约 280px，收起时约 80px
+	// 内容区 padding：60rpx (约30px) × 2 = 60px
+	const cardWidth = 336 + 12 // 卡片宽度 + gap的一半
+	const sidebarWidth = sidebarCollapsed.value ? 80 : 280
+	const contentPadding = 60
+	
+	// 可用宽度 = 窗口宽度 - 侧边栏 - padding
+	const availableWidth = systemInfo.windowWidth - sidebarWidth - contentPadding
+	
+	// 计算实际能容纳的列数
+	const columnsPerRow = Math.floor(availableWidth / cardWidth)
+	
+	// 限制列数范围 1-5
+	const actualColumns = Math.max(1, Math.min(5, columnsPerRow))
+	
+	// 固定5行
+	const fixedRows = 5
+	
+	// 计算每页显示数量 = 5行 × 列数
+	const newPageSize = fixedRows * actualColumns
+	
+	console.log('=== 计算每页显示数量 ===')
+	console.log('窗口宽度:', systemInfo.windowWidth, 'px')
+	console.log('侧边栏宽度:', sidebarWidth, 'px')
+	console.log('可用宽度:', availableWidth, 'px')
+	console.log('卡片宽度:', cardWidth, 'px')
+	console.log('计算列数:', columnsPerRow)
+	console.log('实际列数:', actualColumns)
+	console.log('固定行数:', fixedRows)
+	console.log('每页显示:', newPageSize)
+	console.log('======================')
+	
+	pageSize.value = newPageSize
+}
+
 onMounted(() => {
 	// 从本地存储加载主题设置
 	const savedTheme = uni.getStorageSync('theme')
@@ -404,7 +530,22 @@ onMounted(() => {
 		isDarkMode.value = savedTheme === 'dark'
 	}
 	
+	// 计算每页显示数量
+	calculatePageSize()
+	
+	// 监听窗口大小变化
+	window.addEventListener('resize', calculatePageSize)
+	
+	// 添加键盘事件监听
+	window.addEventListener('keydown', handleKeyDown)
+	
 	loadPlugins()
+})
+
+// 组件卸载时移除事件监听
+onUnmounted(() => {
+	window.removeEventListener('resize', calculatePageSize)
+	window.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
@@ -478,6 +619,28 @@ onMounted(() => {
 	font-weight: 600;
 }
 
+/* 搜索结果高亮 */
+.info-tag.search-result {
+	animation: fadeIn 0.3s ease;
+}
+
+.info-value.highlight {
+	color: #667eea;
+	font-weight: 700;
+	font-size: 32rpx;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateX(-10rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
 /* 黑暗模式变量 - Koishi 原版配色 */
 .market-page.dark-mode {
 	--bg-primary: #0d1117;
@@ -495,6 +658,33 @@ onMounted(() => {
 	--k-text-active: #7c6bce;
 	--k-fill-normal: #6e7681;
 	--card-shadow: 0 0 0 4rpx inset transparent;
+}
+
+/* 黑暗模式下的玻璃效果 */
+.market-page.dark-mode .result-header {
+	/* 黑暗模式已经在 .result-header 中默认设置 */
+}
+
+/* 浅色模式下的玻璃效果覆盖 */
+.market-page:not(.dark-mode) .result-header {
+	background: linear-gradient(
+		to bottom,
+		rgba(255, 255, 255, 0.3) 0%,
+		rgba(255, 255, 255, 0.15) 50%,
+		rgba(255, 255, 255, 0) 100%
+	);
+	border-bottom-color: rgba(208, 215, 222, 0.15);
+}
+
+/* 黑暗模式下的按钮玻璃效果 */
+.market-page.dark-mode .settings-btn,
+.market-page.dark-mode .theme-toggle-btn {
+	background-color: rgba(22, 27, 34, 0.3);
+	border-color: rgba(48, 54, 61, 0.3);
+}
+
+.market-page.dark-mode .refresh-btn {
+	background-color: rgba(124, 107, 206, 0.6);
 }
 
 /* 搜索区域包装 */
@@ -542,15 +732,78 @@ onMounted(() => {
 
 .result-header {
 	padding: 24rpx 60rpx;
-	background-color: var(--bg-primary);
-	border-bottom: 0;
+	/* 渐变半透明玻璃效果 - 从上到下逐渐透明 */
+	background: linear-gradient(
+		to bottom,
+		rgba(13, 17, 23, 0.3) 0%,
+		rgba(13, 17, 23, 0.15) 50%,
+		rgba(13, 17, 23, 0) 100%
+	);
+	backdrop-filter: blur(40rpx) saturate(200%);
+	-webkit-backdrop-filter: blur(40rpx) saturate(200%);
+	border-bottom: 1rpx solid rgba(48, 54, 61, 0.15);
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
 	flex-shrink: 0;
+	position: relative;
+	z-index: 10;
 }
 
 .header-actions {
+	display: flex;
+	gap: 20rpx;
+	align-items: center;
+	width: 100%;
+	justify-content: space-between;
+}
+
+/* 翻页按钮组 */
+.pagination-actions {
+	display: flex;
+	gap: 12rpx;
+}
+
+.page-nav-btn {
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
+	padding: 12rpx 24rpx;
+	background-color: rgba(124, 107, 206, 0.15);
+	backdrop-filter: blur(20rpx);
+	-webkit-backdrop-filter: blur(20rpx);
+	color: var(--text-primary);
+	border: 2rpx solid rgba(124, 107, 206, 0.3);
+	border-radius: 24rpx;
+	font-size: 26rpx;
+	transition: all 0.3s ease;
+	cursor: pointer;
+	font-weight: 500;
+}
+
+.page-nav-btn:hover:not(.disabled) {
+	background-color: var(--primary-color);
+	color: #fff;
+	border-color: var(--primary-color);
+	transform: translateY(-2rpx);
+}
+
+.page-nav-btn.disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.page-nav-icon {
+	font-size: 28rpx;
+	font-weight: bold;
+}
+
+.page-nav-text {
+	white-space: nowrap;
+}
+
+/* 功能按钮组 */
+.function-actions {
 	display: flex;
 	gap: 20rpx;
 }
@@ -559,9 +812,11 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	padding: 12rpx 28rpx;
-	background-color: var(--bg-secondary);
+	background-color: rgba(248, 248, 249, 0.2);
+	backdrop-filter: blur(20rpx);
+	-webkit-backdrop-filter: blur(20rpx);
 	color: var(--text-primary);
-	border: 2rpx solid var(--border-color);
+	border: 2rpx solid rgba(208, 215, 222, 0.3);
 	border-radius: 24rpx;
 	font-size: 26rpx;
 	transition: all 0.3s ease;
@@ -588,9 +843,11 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	padding: 12rpx 28rpx;
-	background-color: var(--bg-secondary);
+	background-color: rgba(248, 248, 249, 0.2);
+	backdrop-filter: blur(20rpx);
+	-webkit-backdrop-filter: blur(20rpx);
 	color: var(--text-primary);
-	border: 2rpx solid var(--border-color);
+	border: 2rpx solid rgba(208, 215, 222, 0.3);
 	border-radius: 24rpx;
 	font-size: 26rpx;
 	transition: all 0.3s ease;
@@ -617,7 +874,9 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	padding: 10rpx 24rpx;
-	background-color: #409eff;
+	background-color: rgba(64, 158, 255, 0.5);
+	backdrop-filter: blur(20rpx);
+	-webkit-backdrop-filter: blur(20rpx);
 	color: #fff;
 	border-radius: 20rpx;
 	font-size: 24rpx;
@@ -726,6 +985,13 @@ onMounted(() => {
 	background-color: var(--bg-primary);
 }
 
+.pagination-group {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 8rpx;
+}
+
 .page-btn {
 	min-width: 80rpx;
 	height: 64rpx;
@@ -751,6 +1017,14 @@ onMounted(() => {
 .page-btn.disabled {
 	opacity: 0.4;
 	cursor: not-allowed;
+}
+
+.page-hint {
+	font-size: 20rpx;
+	color: var(--text-tertiary);
+	opacity: 0.6;
+	font-weight: 400;
+	letter-spacing: 1rpx;
 }
 
 .page-info {
@@ -809,18 +1083,47 @@ onMounted(() => {
 	}
 	
 	.header-actions {
+		flex-direction: column;
+		width: 100%;
+		gap: 16rpx;
+	}
+	
+	/* 手机端翻页按钮在上方 */
+	.pagination-actions {
+		width: 100%;
+		justify-content: space-between;
+		order: 1;
+		gap: 16rpx;
+	}
+	
+	.page-nav-btn {
+		flex: 1;
+		justify-content: center;
+		padding: 18rpx 24rpx;
+		font-size: 28rpx;
+		min-width: 0;
+	}
+	
+	.page-nav-icon {
+		font-size: 32rpx;
+	}
+	
+	/* 手机端功能按钮在下方 */
+	.function-actions {
+		width: 100%;
+		order: 2;
 		flex-wrap: wrap;
 		gap: 12rpx;
-		justify-content: center;
+		justify-content: space-between;
 	}
 	
 	.settings-btn,
 	.theme-toggle-btn,
 	.refresh-btn {
-		flex: 1 1 calc(50% - 6rpx);
+		flex: 1 1 calc(33.333% - 8rpx);
 		min-width: 0;
 		justify-content: center;
-		padding: 16rpx 20rpx;
+		padding: 16rpx 12rpx;
 		font-size: 24rpx;
 	}
 	
@@ -846,10 +1149,20 @@ onMounted(() => {
 		flex-wrap: wrap;
 	}
 	
+	.pagination-group {
+		flex-direction: row;
+		gap: 12rpx;
+	}
+	
 	.page-btn {
 		height: 70rpx;
 		min-width: 70rpx;
 		font-size: 26rpx;
+	}
+	
+	.page-hint {
+		font-size: 18rpx;
+		white-space: nowrap;
 	}
 	
 	.page-info {

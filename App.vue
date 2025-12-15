@@ -22,5 +22,37 @@
 
 <style>
 	/*每个页面公共css */
+	
+	/* 引入霞鹜文楷等宽字体 */
+	@font-face {
+		font-family: 'LXGWWenKaiMono';
+		src: url('/static/fonts/LXGWWenKaiMono-Light.ttf') format('truetype');
+		font-weight: 300;
+		font-style: normal;
+	}
+	
+	@font-face {
+		font-family: 'LXGWWenKaiMono';
+		src: url('/static/fonts/LXGWWenKaiMono-Regular.ttf') format('truetype');
+		font-weight: 400;
+		font-style: normal;
+	}
+	
+	@font-face {
+		font-family: 'LXGWWenKaiMono';
+		src: url('/static/fonts/LXGWWenKaiMono-Medium.ttf') format('truetype');
+		font-weight: 500;
+		font-style: normal;
+	}
+	
+	/* 全局应用字体 */
+	page {
+		font-family: 'LXGWWenKaiMono', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	}
+	
+	/* 确保所有元素继承字体 */
+	* {
+		font-family: inherit;
+	}
 
 </style>

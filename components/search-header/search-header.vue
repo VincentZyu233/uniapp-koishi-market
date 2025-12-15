@@ -85,6 +85,7 @@ const handleRemoveTag = (index) => {
 	background-color: transparent;
 	padding: 0;
 	z-index: 100;
+	width: 100%;
 }
 
 .search-bar {
@@ -122,8 +123,11 @@ const handleRemoveTag = (index) => {
 }
 
 .search-tags {
-	margin-top: 24rpx;
+	margin-top: 20rpx;
 	white-space: nowrap;
+	max-width: 1200rpx;
+	margin-left: auto;
+	margin-right: auto;
 	padding: 0 40rpx;
 }
 
@@ -131,34 +135,50 @@ const handleRemoveTag = (index) => {
 	display: flex;
 	gap: 16rpx;
 	flex-wrap: wrap;
+	align-items: center;
 }
 
 .search-tag {
 	display: inline-flex;
 	align-items: center;
-	padding: 8rpx 20rpx;
-	background-color: var(--k-fill-normal, #8c959f);
+	padding: 12rpx 24rpx;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 	color: white;
-	border-radius: 8rpx;
-	font-size: 28rpx;
+	border-radius: 24rpx;
+	font-size: 26rpx;
 	font-weight: 500;
 	white-space: nowrap;
 	cursor: pointer;
 	user-select: none;
-	transition: opacity 0.3s ease, background-color 0.3s ease;
-	vertical-align: baseline;
-	height: 40rpx;
-	line-height: 32rpx;
-	box-sizing: border-box;
+	transition: all 0.3s ease;
+	box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+	animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10rpx);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .search-tag:hover {
-	opacity: 0.8;
+	transform: translateY(-2rpx);
+	box-shadow: 0 6rpx 16rpx rgba(102, 126, 234, 0.4);
+}
+
+.search-tag:active {
+	transform: translateY(0);
 }
 
 .tag-close {
 	margin-left: 12rpx;
 	font-weight: bold;
-	font-size: 24rpx;
+	font-size: 28rpx;
+	opacity: 0.8;
 }
 </style>

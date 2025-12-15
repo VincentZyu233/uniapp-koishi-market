@@ -24,19 +24,38 @@
 				<!-- 插件头部信息 -->
 				<view class="plugin-header">
 					<view class="plugin-icon">
-						<text class="icon-text">📦</text>
+						<!-- 如果有头像则显示头像，否则显示图标 -->
+						<image 
+							v-if="authorEmail" 
+							class="author-avatar"
+							:src="getAvatarUrl(authorEmail)" 
+							mode="aspectFill"
+							@error="handleAvatarError"
+						/>
+						<view v-else class="icon-fallback">
+							<text class="icon-text">{{ getCategoryIcon(plugin.category) }}</text>
+						</view>
 					</view>
 					<view class="plugin-basic-info">
 						<view class="plugin-name">{{ plugin.shortname || plugin.name }}</view>
-						<view class="plugin-package">{{ plugin.package?.name || plugin.name }}</view>
+						<view class="plugin-package">@{{ plugin._raw?.package?.name || plugin.name }}</view>
+						<view class="plugin-author" v-if="plugin.author">
+							<text class="author-icon">👤</text>
+							<text>{{ plugin.author }}</text>
+						</view>
 					</view>
 				</view>
 				
 				<!-- 插件描述 -->
-				<view class="section" v-if="plugin.package?.description">
-					<view class="section-title">📝 插件描述</view>
+				<view class="section">
+					<view class="section-title">📝 描述</view>
 					<view class="section-content">
-						<text class="description-text">{{ getDescription(plugin.package.description) }}</text>
+						<rich-text-parser 
+							class="description-text" 
+							:text="getDescription(plugin.description || plugin._raw?.manifest?.description)"
+							:parse-images="true"
+							:parse-links="true"
+						/>
 					</view>
 				</view>
 				
@@ -59,24 +78,32 @@
 				<view class="section">
 					<view class="section-title">📊 统计信息</view>
 					<view class="info-grid">
-						<view class="info-item" v-if="plugin.downloads">
+						<view class="info-item">
 							<text class="info-label">下载量</text>
-							<text class="info-value">{{ formatNumber(plugin.downloads.lastMonth) }}/月</text>
+							<text class="info-value">{{ formatNumber(plugin.downloads || plugin._raw?.downloads?.lastMonth) }}/月</text>
 						</view>
-						<view class="info-item" v-if="plugin.rating">
+						<view class="info-item">
 							<text class="info-label">评分</text>
 							<view class="rating-value">
 								<text class="stars">{{ renderStars(plugin.rating) }}</text>
-								<text class="rating-number">{{ plugin.rating.toFixed(1) }}</text>
+								<text class="rating-number">{{ plugin.rating?.toFixed(1) || '0.0' }}</text>
 							</view>
 						</view>
-						<view class="info-item" v-if="plugin.installSize">
+						<view class="info-item">
 							<text class="info-label">安装大小</text>
-							<text class="info-value">{{ formatSize(plugin.installSize) }}</text>
+							<text class="info-value">{{ formatSize(plugin.installSize || plugin._raw?.installSize) }}</text>
 						</view>
-						<view class="info-item" v-if="plugin.downloads">
-							<text class="info-label">总下载</text>
-							<text class="info-value">{{ formatNumber(plugin.downloads.lastYear) }}</text>
+						<view class="info-item">
+							<text class="info-label">发布大小</text>
+							<text class="info-value">{{ formatSize(plugin.publishSize || plugin._raw?.publishSize) }}</text>
+						</view>
+						<view class="info-item">
+							<text class="info-label">依赖数</text>
+							<text class="info-value">{{ plugin.dependents || plugin._raw?.dependents || 0 }}</text>
+						</view>
+						<view class="info-item" v-if="plugin._raw?.score">
+							<text class="info-label">质量评分</text>
+							<text class="info-value">{{ plugin._raw.score.quality?.toFixed(1) || 'N/A' }}</text>
 						</view>
 					</view>
 				</view>
@@ -100,54 +127,128 @@
 					</view>
 				</view>
 				
-				<!-- 作者信息 -->
-				<view class="section" v-if="plugin.contributors || plugin.maintainers">
-					<view class="section-title">👤 作者信息</view>
-					<view class="contributors-list">
-						<view class="contributor" v-for="(contributor, index) in getContributors()" :key="index">
-							<text class="contributor-name">{{ contributor.name || contributor }}</text>
-							<text class="contributor-email" v-if="contributor.email">{{ contributor.email }}</text>
+				<!-- 发布者信息 -->
+				<view class="section" v-if="plugin._raw?.package?.publisher">
+					<view class="section-title">👤 发布者</view>
+					<view class="publisher-card">
+						<image 
+							class="publisher-avatar"
+							:src="getAvatarUrl(plugin._raw.package.publisher.email)" 
+							mode="aspectFill"
+						/>
+						<view class="publisher-info">
+							<text class="publisher-name">{{ plugin._raw.package.publisher.username }}</text>
+							<text class="publisher-email">{{ plugin._raw.package.publisher.email }}</text>
+						</view>
+					</view>
+				</view>
+				
+				<!-- 维护者信息 -->
+				<view class="section" v-if="plugin._raw?.package?.maintainers?.length">
+					<view class="section-title">🛠️ 维护者 ({{ plugin._raw.package.maintainers.length }})</view>
+					<view class="maintainers-list">
+						<view class="maintainer-card" v-for="(maintainer, index) in plugin._raw.package.maintainers" :key="index">
+							<image 
+								class="maintainer-avatar"
+								:src="getAvatarUrl(maintainer.email)" 
+								mode="aspectFill"
+							/>
+							<view class="maintainer-info">
+								<text class="maintainer-name">{{ maintainer.username }}</text>
+								<text class="maintainer-email">{{ maintainer.email }}</text>
+							</view>
+						</view>
+					</view>
+				</view>
+				
+				<!-- 服务实现 -->
+				<view class="section" v-if="plugin._raw?.manifest?.service">
+					<view class="section-title">⚙️ 服务</view>
+					<view class="service-info">
+						<view class="service-item" v-if="plugin._raw.manifest.service.implements?.length">
+							<text class="service-label">实现：</text>
+							<view class="service-tags">
+								<text class="service-tag" v-for="(impl, index) in plugin._raw.manifest.service.implements" :key="index">
+									{{ impl }}
+								</text>
+							</view>
+						</view>
+						<view class="service-item" v-if="plugin._raw.manifest.service.required?.length">
+							<text class="service-label">依赖：</text>
+							<view class="service-tags">
+								<text class="service-tag required" v-for="(req, index) in plugin._raw.manifest.service.required" :key="index">
+									{{ req }}
+								</text>
+							</view>
+						</view>
+						<view class="service-item" v-if="plugin._raw.manifest.service.optional?.length">
+							<text class="service-label">可选：</text>
+							<view class="service-tags">
+								<text class="service-tag optional" v-for="(opt, index) in plugin._raw.manifest.service.optional" :key="index">
+									{{ opt }}
+								</text>
+							</view>
 						</view>
 					</view>
 				</view>
 				
 				<!-- 关键词 -->
-				<view class="section" v-if="plugin.package?.keywords && plugin.package.keywords.length > 0">
+				<view class="section" v-if="plugin._raw?.package?.keywords?.length">
 					<view class="section-title">🔖 关键词</view>
 					<view class="keywords-container">
-						<view class="keyword-tag" v-for="(keyword, index) in plugin.package.keywords" :key="index">
+						<view class="keyword-tag" v-for="(keyword, index) in plugin._raw.package.keywords" :key="index">
 							{{ keyword }}
 						</view>
 					</view>
 				</view>
 				
 				<!-- 链接信息 -->
-				<view class="section">
+				<view class="section" v-if="plugin._raw?.package?.links">
 					<view class="section-title">🔗 相关链接</view>
 					<view class="links-container">
-						<view class="link-item" v-if="plugin.links?.npm" @click="copyLink(plugin.links.npm)">
+						<view class="link-item" v-if="plugin._raw.package.links.npm" @click="copyLink(plugin._raw.package.links.npm)">
 							<text class="link-icon">📦</text>
 							<text class="link-text">NPM</text>
-							<text class="link-url">{{ plugin.links.npm }}</text>
+							<text class="link-url">{{ plugin._raw.package.links.npm }}</text>
 						</view>
-						<view class="link-item" v-if="plugin.links?.homepage" @click="copyLink(plugin.links.homepage)">
+						<view class="link-item" v-if="plugin._raw.package.links.homepage" @click="copyLink(plugin._raw.package.links.homepage)">
 							<text class="link-icon">🏠</text>
 							<text class="link-text">主页</text>
-							<text class="link-url">{{ plugin.links.homepage }}</text>
+							<text class="link-url">{{ plugin._raw.package.links.homepage }}</text>
 						</view>
-						<view class="link-item" v-if="plugin.links?.repository" @click="copyLink(plugin.links.repository)">
+						<view class="link-item" v-if="plugin._raw.package.links.repository" @click="copyLink(plugin._raw.package.links.repository)">
 							<text class="link-icon">💻</text>
 							<text class="link-text">仓库</text>
-							<text class="link-url">{{ plugin.links.repository }}</text>
+							<text class="link-url">{{ plugin._raw.package.links.repository }}</text>
+						</view>
+						<view class="link-item" v-if="plugin._raw.package.links.bugs" @click="copyLink(plugin._raw.package.links.bugs)">
+							<text class="link-icon">🐛</text>
+							<text class="link-text">问题反馈</text>
+							<text class="link-url">{{ plugin._raw.package.links.bugs }}</text>
 						</view>
 					</view>
 				</view>
 				
-				<!-- 更新时间 -->
-				<view class="section" v-if="plugin.updatedAt">
-					<view class="section-title">⏰ 更新时间</view>
-					<view class="section-content">
-						<text class="update-time">{{ formatDate(plugin.updatedAt) }}</text>
+				<!-- 时间信息 -->
+				<view class="section">
+					<view class="section-title">⏰ 时间信息</view>
+					<view class="info-grid">
+						<view class="info-item" v-if="plugin.createdAt">
+							<text class="info-label">创建时间</text>
+							<text class="info-value">{{ formatDate(plugin.createdAt) }}</text>
+						</view>
+						<view class="info-item" v-if="plugin.updatedAt">
+							<text class="info-label">更新时间</text>
+							<text class="info-value">{{ formatDate(plugin.updatedAt) }}</text>
+						</view>
+						<view class="info-item" v-if="plugin.license">
+							<text class="info-label">开源协议</text>
+							<text class="info-value">{{ plugin.license }}</text>
+						</view>
+						<view class="info-item" v-if="plugin.category">
+							<text class="info-label">分类</text>
+							<text class="info-value">{{ getCategoryName(plugin.category) }}</text>
+						</view>
 					</view>
 				</view>
 			</view>
@@ -158,10 +259,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
+import RichTextParser from '@/components/rich-text-parser/rich-text-parser.vue';
+import { simpleMd5 } from '@/utils/md5.js';
 
 const isDarkMode = ref(false);
 const isLoading = ref(true);
 const plugin = ref({});
+const avatarError = ref(false);
 
 // 从上一页接收插件数据
 onLoad((options) => {
@@ -175,6 +279,13 @@ onLoad((options) => {
 		// 接收插件数据
 		if (options.plugin) {
 			plugin.value = JSON.parse(decodeURIComponent(options.plugin));
+			
+			// 调试：打印当前插件的完整数据结构
+			console.log('=== 插件详情页 - 当前插件数据结构 ===')
+			console.log('插件名称:', plugin.value.shortname || plugin.value.name)
+			console.log('完整数据:', JSON.stringify(plugin.value, null, 2))
+			console.log('=======================================')
+			
 			isLoading.value = false;
 		} else {
 			// 如果没有数据，显示错误并返回
@@ -219,6 +330,70 @@ const getDescription = (description) => {
 	return description || '暂无描述';
 };
 
+// 获取作者邮箱（用于 Gravatar）
+const authorEmail = computed(() => {
+	if (avatarError.value) return null
+	
+	const p = plugin.value
+	
+	// 优先从 _raw.package.publisher 获取
+	if (p._raw?.package?.publisher?.email) {
+		return p._raw.package.publisher.email
+	}
+	
+	// 从 _raw.package.maintainers 获取
+	if (p._raw?.package?.maintainers?.length > 0) {
+		const email = p._raw.package.maintainers[0].email
+		if (email) return email
+	}
+	
+	return null
+});
+
+// 获取 Gravatar 头像 URL
+const getAvatarUrl = (email) => {
+	if (!email) return ''
+	const hash = simpleMd5(email.toLowerCase().trim())
+	return `https://www.gravatar.com/avatar/${hash}?d=identicon&s=96`
+};
+
+// 头像加载失败处理
+const handleAvatarError = () => {
+	avatarError.value = true
+};
+
+// 获取分类图标
+const getCategoryIcon = (category) => {
+	const icons = {
+		adapter: '🔌',
+		extension: '🧩',
+		tool: '🔧',
+		game: '🎮',
+		image: '🖼️',
+		manage: '⚙️',
+		general: '📦',
+		webui: '🌐',
+		other: '📋'
+	};
+	return icons[category] || '📦';
+};
+
+// 获取分类名称
+const getCategoryName = (category) => {
+	const names = {
+		adapter: '适配器',
+		extension: '扩展功能',
+		tool: '实用工具',
+		game: '娱乐玩法',
+		image: '图片服务',
+		manage: '管理工具',
+		general: '通用功能',
+		webui: 'Web界面',
+		other: '其他'
+	};
+	return names[category] || category;
+};
+
 // 获取贡献者列表
 const getContributors = () => {
 	const contributors = plugin.value.contributors || [];
@@ -228,11 +403,16 @@ const getContributors = () => {
 
 // 渲染星级
 const renderStars = (rating) => {
+	if (!rating || rating < 0) rating = 0;
+	if (rating > 5) rating = 5;
+	
 	const fullStars = Math.floor(rating);
 	const hasHalfStar = rating % 1 >= 0.5;
+	const emptyStars = 5 - Math.ceil(rating);
+	
 	let stars = '★'.repeat(fullStars);
 	if (hasHalfStar) stars += '☆';
-	stars += '☆'.repeat(5 - Math.ceil(rating));
+	if (emptyStars > 0) stars += '☆'.repeat(emptyStars);
 	return stars;
 };
 
@@ -424,12 +604,27 @@ const copyLink = (url) => {
 .plugin-icon {
 	width: 120rpx;
 	height: 120rpx;
-	background-color: var(--bg-tertiary);
-	border-radius: 20rpx;
+	background: linear-gradient(135deg, var(--primary-color), #7c66d4);
+	border-radius: 24rpx;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	overflow: hidden;
+}
+
+.author-avatar {
+	width: 100%;
+	height: 100%;
+	border-radius: 24rpx;
+}
+
+.icon-fallback {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .icon-text {
@@ -453,6 +648,19 @@ const copyLink = (url) => {
 	font-size: 28rpx;
 	color: var(--text-secondary);
 	word-break: break-word;
+	margin-bottom: 8rpx;
+}
+
+.plugin-author {
+	font-size: 26rpx;
+	color: var(--text-tertiary);
+	display: flex;
+	align-items: center;
+	gap: 6rpx;
+}
+
+.author-icon {
+	font-size: 24rpx;
 }
 
 /* 区块样式 */
@@ -461,6 +669,12 @@ const copyLink = (url) => {
 	border-radius: 16rpx;
 	padding: 30rpx;
 	margin-bottom: 30rpx;
+	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.section:hover {
+	transform: translateY(-2rpx);
+	box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
 }
 
 .section-title {
@@ -487,8 +701,14 @@ const copyLink = (url) => {
 /* 信息网格 */
 .info-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200rpx, 1fr));
+	grid-template-columns: repeat(auto-fit, minmax(220rpx, 1fr));
 	gap: 24rpx;
+}
+
+@media (min-width: 768px) {
+	.info-grid {
+		grid-template-columns: repeat(4, 1fr);
+	}
 }
 
 .info-item {
@@ -498,6 +718,13 @@ const copyLink = (url) => {
 	padding: 20rpx;
 	background-color: var(--bg-tertiary);
 	border-radius: 12rpx;
+	transition: all 0.25s ease;
+}
+
+.info-item:hover {
+	background-color: var(--bg-primary);
+	transform: scale(1.03);
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
 }
 
 .info-label {
@@ -542,6 +769,12 @@ const copyLink = (url) => {
 	padding: 12rpx 24rpx;
 	border-radius: 20rpx;
 	font-size: 24rpx;
+	transition: all 0.25s ease;
+}
+
+.badge:hover {
+	transform: scale(1.05);
+	filter: brightness(1.1);
 }
 
 .badge.verified {
@@ -565,6 +798,162 @@ const copyLink = (url) => {
 
 .badge-text {
 	font-weight: 500;
+}
+
+/* 发布者卡片 */
+.publisher-card {
+	display: flex;
+	align-items: center;
+	gap: 24rpx;
+	padding: 24rpx;
+	background-color: var(--bg-tertiary);
+	border-radius: 12rpx;
+	transition: all 0.3s ease;
+}
+
+.publisher-card:hover {
+	background-color: var(--bg-primary);
+	transform: scale(1.02);
+	box-shadow: 0 4rpx 12rpx rgba(85, 70, 163, 0.1);
+}
+
+.publisher-avatar {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 50%;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.publisher-avatar:hover {
+	transform: scale(1.1) rotate(5deg);
+	box-shadow: 0 4rpx 12rpx rgba(85, 70, 163, 0.3);
+}
+
+.publisher-info {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 8rpx;
+}
+
+.publisher-name {
+	font-size: 28rpx;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.publisher-email {
+	font-size: 24rpx;
+	color: var(--text-tertiary);
+	word-break: break-all;
+}
+
+/* 维护者列表 */
+.maintainers-list {
+	display: flex;
+	flex-direction: column;
+	gap: 16rpx;
+}
+
+.maintainer-card {
+	display: flex;
+	align-items: center;
+	gap: 20rpx;
+	padding: 20rpx;
+	background-color: var(--bg-tertiary);
+	border-radius: 12rpx;
+	transition: all 0.25s ease;
+}
+
+.maintainer-card:hover {
+	background-color: var(--bg-primary);
+	transform: translateX(8rpx);
+	box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+.maintainer-avatar {
+	width: 64rpx;
+	height: 64rpx;
+	border-radius: 50%;
+	flex-shrink: 0;
+	transition: all 0.3s ease;
+}
+
+.maintainer-avatar:hover {
+	transform: scale(1.15) rotate(-5deg);
+	box-shadow: 0 2rpx 8rpx rgba(85, 70, 163, 0.3);
+}
+
+.maintainer-info {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 6rpx;
+}
+
+.maintainer-name {
+	font-size: 26rpx;
+	font-weight: 600;
+	color: var(--text-primary);
+}
+
+.maintainer-email {
+	font-size: 22rpx;
+	color: var(--text-tertiary);
+	word-break: break-all;
+}
+
+/* 服务信息 */
+.service-info {
+	display: flex;
+	flex-direction: column;
+	gap: 20rpx;
+}
+
+.service-item {
+	display: flex;
+	flex-direction: column;
+	gap: 12rpx;
+}
+
+.service-label {
+	font-size: 26rpx;
+	color: var(--text-secondary);
+	font-weight: 600;
+}
+
+.service-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12rpx;
+}
+
+.service-tag {
+	padding: 8rpx 16rpx;
+	background-color: var(--bg-primary);
+	border: 2rpx solid var(--border-color);
+	border-radius: 12rpx;
+	font-size: 24rpx;
+	color: var(--text-primary);
+	transition: all 0.2s ease;
+}
+
+.service-tag:hover {
+	transform: scale(1.08);
+	box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+.service-tag.required {
+	background-color: rgba(85, 70, 163, 0.1);
+	border-color: var(--primary-color);
+	color: var(--primary-color);
+}
+
+.service-tag.optional {
+	background-color: rgba(191, 135, 0, 0.1);
+	border-color: var(--warning-color);
+	color: var(--warning-color);
 }
 
 /* 贡献者列表 */
@@ -608,6 +997,15 @@ const copyLink = (url) => {
 	border-radius: 20rpx;
 	font-size: 24rpx;
 	color: var(--text-secondary);
+	transition: all 0.2s ease;
+}
+
+.keyword-tag:hover {
+	background: linear-gradient(135deg, var(--primary-color), #7c66d4);
+	color: #fff;
+	border-color: transparent;
+	transform: scale(1.05) rotate(-1deg);
+	box-shadow: 0 2rpx 8rpx rgba(85, 70, 163, 0.3);
 }
 
 /* 链接 */
@@ -625,11 +1023,17 @@ const copyLink = (url) => {
 	background-color: var(--bg-tertiary);
 	border-radius: 12rpx;
 	cursor: pointer;
-	transition: all 0.3s;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.link-item:hover {
+	background-color: var(--bg-primary);
+	transform: translateX(4rpx) scale(1.02);
+	box-shadow: -4rpx 0 0 0 var(--primary-color), 0 4rpx 12rpx rgba(85, 70, 163, 0.15);
 }
 
 .link-item:active {
-	transform: scale(0.98);
+	transform: translateX(2rpx) scale(0.99);
 	background-color: var(--bg-primary);
 }
 
