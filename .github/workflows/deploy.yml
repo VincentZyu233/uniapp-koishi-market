@@ -27,40 +27,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-      
-      - name: Install dependencies
-        run: npm install
-      
-      - name: Build for H5
-        run: npm run build:h5
-      
-      - name: Verify build output
-        run: |
-          echo "Checking build output..."
-          ls -la unpackage/dist/build/
-          if [ -d "unpackage/dist/build/h5" ]; then
-            echo "Using h5 directory"
-            echo "BUILD_PATH=./unpackage/dist/build/h5" >> $GITHUB_ENV
-          elif [ -d "unpackage/dist/build/web" ]; then
-            echo "Using web directory"
-            echo "BUILD_PATH=./unpackage/dist/build/web" >> $GITHUB_ENV
-          else
-            echo "Build output not found!"
-            exit 1
-          fi
-      
       - name: Setup Pages
         uses: actions/configure-pages@v4
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ env.BUILD_PATH }}
+          path: './unpackage/dist/build/web'
   
       - name: Deploy to GitHub Pages
         id: deployment
