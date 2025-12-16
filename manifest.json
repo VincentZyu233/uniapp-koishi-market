@@ -2,7 +2,7 @@
     "name" : "uniapp-mp-qwq-server-frontend",
     "appid" : "__UNI__850E479",
     "description" : "qwq拨无因果的神秘小服服",
-    "versionName" : "0.1.0-alpha1",
+    "versionName" : "0.1.2-alpha2",
     "versionCode" : 20251215,
     "transformPx" : false,
     /* 5+App特有相关 */
@@ -119,7 +119,7 @@
     },
     "vueVersion" : "3",
     "mp-qq" : {
-        "appid" : "1112412334",
+        "appid" : "1112416278",
         "uniStatistics" : {
             "enable" : false
         }
@@ -132,16 +132,7 @@
         },
         "uniStatistics" : {
             "enable" : false
-        },
-        "devServer" : {
-            "port" : 8080
-        },
-        "optimization" : {
-            "treeShaking" : {
-                "enable" : true
-            }
-        },
-        "template" : "index.html"
+        }
     },
     "locale" : "zh-Hans",
     "app-harmony" : {

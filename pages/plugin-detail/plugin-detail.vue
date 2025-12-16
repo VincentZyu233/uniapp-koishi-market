@@ -1,5 +1,5 @@
 <template>
-	<view class="plugin-detail-page" :class="{ 'dark-mode': isDarkMode }">
+	<view class="plugin-detail-page" :class="{ 'dark-mode': isDarkMode }" :style="{ paddingTop: statusBarOffset + 'px' }">
 		<!-- 顶部导航栏 -->
 		<view class="detail-header">
 			<view class="back-btn" @click="goBack">
@@ -261,15 +261,26 @@ import { ref, computed, onMounted } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import RichTextParser from '@/components/rich-text-parser/rich-text-parser.vue';
 import { simpleMd5 } from '@/utils/md5.js';
+// #ifdef MP-WEIXIN || MP-QQ
+import { getStatusBarHeight } from '@/utils/system.js'
+// #endif
 
 const isDarkMode = ref(false);
 const isLoading = ref(true);
 const plugin = ref({});
 const avatarError = ref(false);
+const statusBarOffset = ref(0);
 
 // 从上一页接收插件数据
 onLoad((options) => {
 	try {
+		// 小程序状态栏适配
+		// #ifdef MP-WEIXIN || MP-QQ
+		const statusBarHeight = getStatusBarHeight()
+		statusBarOffset.value = statusBarHeight + 10
+		console.log('状态栏高度:', statusBarHeight, 'px，偏移量:', statusBarOffset.value, 'px')
+		// #endif
+		
 		// 从localStorage读取主题设置
 		const savedTheme = uni.getStorageSync('theme');
 		if (savedTheme) {

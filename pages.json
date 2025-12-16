@@ -41,8 +41,9 @@
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8",
-		"fontFamily": "MinecraftAE",
-		"fontSize": "16px"
+		"fontSize": "13px",
+		"rpxCalcMaxDeviceWidth": 0,
+		"rpxCalcBaseDeviceWidth": 450
 	},
 	"uniIdRouter": {}
 }

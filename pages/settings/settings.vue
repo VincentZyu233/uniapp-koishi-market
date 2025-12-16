@@ -1,5 +1,5 @@
 <template>
-	<view class="settings-page" :class="{ 'dark-mode': isDarkMode }">
+	<view class="settings-page" :class="{ 'dark-mode': isDarkMode }" :style="{ paddingTop: statusBarOffset + 'px' }">
 		<view class="settings-header">
 			<text class="header-title">⚙️ 设置</text>
 			<view class="theme-toggle" @click="toggleTheme">
@@ -97,9 +97,13 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { DEFAULT_MARKET_SEARCH_ENDPOINT, fetchMarketData } from '../../utils/request.js'
+// #ifdef MP-WEIXIN || MP-QQ
+import { getStatusBarHeight } from '@/utils/system.js'
+// #endif
 
 // 主题模式
 const isDarkMode = ref(true)
+const statusBarOffset = ref(0)
 
 // 预设源列表
 const presetSources = ref([
@@ -185,6 +189,13 @@ const currentEndpoint = computed(() => {
 
 // 加载保存的设置
 onMounted(() => {
+	// 小程序状态栏适配
+	// #ifdef MP-WEIXIN || MP-QQ
+	const statusBarHeight = getStatusBarHeight()
+	statusBarOffset.value = statusBarHeight + 10
+	console.log('状态栏高度:', statusBarHeight, 'px，偏移量:', statusBarOffset.value, 'px')
+	// #endif
+	
 	// 加载主题
 	const savedTheme = uni.getStorageSync('theme')
 	if (savedTheme) {

@@ -1,5 +1,5 @@
 <template>
-	<view class="market-page" :class="{ 'dark-mode': isDarkMode }">
+	<view class="market-page" :class="{ 'dark-mode': isDarkMode }" :style="{ paddingTop: statusBarOffset + 'px' }">
 		<!-- GitHub 链接 -->
 		<view class="github-link" @click="openGithub">
 			<image 
@@ -40,13 +40,6 @@
 		
 		<!-- 主体内容区域 -->
 		<view class="content">
-			<!-- 移动端遮罩层 -->
-			<view 
-				v-if="!sidebarCollapsed" 
-				class="sidebar-mask" 
-				@click="toggleSidebar"
-			></view>
-			
 			<!-- 侧边分类栏 -->
 			<market-sidebar
 				:collapsed="sidebarCollapsed"
@@ -164,6 +157,12 @@ import { fetchMarketData, getCurrentEndpoint } from '@/utils/request.js'
 import PluginCard from '@/components/plugin-card/plugin-card.vue'
 import MarketSidebar from '@/components/market-sidebar/market-sidebar.vue'
 import SearchHeader from '@/components/search-header/search-header.vue'
+// #ifdef MP-WEIXIN || MP-QQ
+import { getStatusBarHeight } from '@/utils/system.js'
+// #endif
+
+// 小程序状态栏适配
+const statusBarOffset = ref(0)
 
 // 搜索相关
 const searchWords = ref([])
@@ -567,6 +566,13 @@ const calculatePageSize = () => {
 }
 
 onMounted(() => {
+	// 小程序状态栏适配
+	// #ifdef MP-WEIXIN || MP-QQ
+	const statusBarHeight = getStatusBarHeight()
+	statusBarOffset.value = statusBarHeight + 10
+	console.log('状态栏高度:', statusBarHeight, 'px，偏移量:', statusBarOffset.value, 'px')
+	// #endif
+	
 	// 从本地存储加载主题设置
 	const savedTheme = uni.getStorageSync('theme')
 	if (savedTheme) {
@@ -703,10 +709,29 @@ onUnmounted(() => {
 
 .info-tag:first-child .info-value {
 	font-size: 20rpx;
-	max-width: 400rpx;
+	max-width: min(400rpx, calc(100vw - 600rpx));
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+/* 响应式调整当前源 URL 显示宽度 */
+@media (min-width: 1200px) {
+	.info-tag:first-child .info-value {
+		max-width: min(800rpx, calc(100vw - 800rpx));
+	}
+}
+
+@media (min-width: 1600px) {
+	.info-tag:first-child .info-value {
+		max-width: min(1200rpx, calc(100vw - 1000rpx));
+	}
+}
+
+@media (min-width: 2000px) {
+	.info-tag:first-child .info-value {
+		max-width: 1600rpx;
+	}
 }
 
 /* 搜索结果高亮 */
@@ -794,24 +819,6 @@ onUnmounted(() => {
 	display: flex;
 	overflow: hidden;
 	position: relative;
-}
-
-/* 移动端侧边栏遮罩 */
-.sidebar-mask {
-	display: none;
-}
-
-@media (max-width: 768rpx) {
-	.sidebar-mask {
-		display: block;
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background-color: rgba(0, 0, 0, 0.5);
-		z-index: 999;
-	}
 }
 
 /* 插件列表 */
@@ -1132,8 +1139,8 @@ onUnmounted(() => {
 	font-weight: 500;
 }
 
-/* 响应式布局 */
-@media (max-width: 768rpx) {
+/* 响应式布局 - 只在真正的小屏设备上应用 */
+@media (max-width: 600px) {
 	.github-link {
 		top: 15rpx;
 		right: 15rpx;
@@ -1278,7 +1285,7 @@ onUnmounted(() => {
 }
 
 /* 超小屏幕优化 */
-@media (max-width: 375rpx) {
+@media (max-width: 375px) {
 	.info-tag {
 		padding: 8rpx 16rpx;
 		font-size: 22rpx;
