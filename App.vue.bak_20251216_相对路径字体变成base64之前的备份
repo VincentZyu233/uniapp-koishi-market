@@ -21,6 +21,7 @@
 </script>
 
 <style>
+	/* 算了 小程序还是不用字体了，我真服了( */
 	/*  #ifdef WEB  */
 	@font-face {
 		font-family: 'LXGWWenKaiMono';
