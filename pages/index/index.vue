@@ -1,6 +1,7 @@
 <template>
 	<view class="market-page" :class="{ 'dark-mode': isDarkMode }" :style="{ paddingTop: statusBarOffset + 'px' }">
 		<!-- GitHub 链接 -->
+		<!-- #ifdef WEB -->
 		<view class="github-link" @click="openGithub">
 			<image 
 				class="github-icon" 
@@ -8,6 +9,7 @@
 				mode="aspectFit"
 			/>
 		</view>
+		<!-- #endif -->
 		
 		<!-- 顶部搜索栏和信息栏 -->
 		<view class="top-section">
@@ -153,6 +155,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { onLoad } from "@dcloudio/uni-app";
 import { fetchMarketData, getCurrentEndpoint } from '@/utils/request.js'
 import PluginCard from '@/components/plugin-card/plugin-card.vue'
 import MarketSidebar from '@/components/market-sidebar/market-sidebar.vue'
@@ -569,7 +572,7 @@ onMounted(() => {
 	// 小程序状态栏适配
 	// #ifdef MP-WEIXIN || MP-QQ
 	const statusBarHeight = getStatusBarHeight()
-	statusBarOffset.value = statusBarHeight + 10
+	statusBarOffset.value = statusBarHeight + 0.999999999
 	console.log('状态栏高度:', statusBarHeight, 'px，偏移量:', statusBarOffset.value, 'px')
 	// #endif
 	
@@ -600,6 +603,35 @@ onUnmounted(() => {
 	window.removeEventListener('resize', calculatePageSize)
 	window.removeEventListener('keydown', handleKeyDown)
 })
+
+onLoad(()=>{
+	// #ifdef MP-QQ
+	console.log("qq小程序的神秘要求捏");
+	console.log("set qq.showShareMenu in index.vue");
+	qq.showShareMenu({
+		showShareItems: ['qq', 'qzone', 'wechatFriends', 'wechatMoment'],
+		withShareTicket: true,
+	});
+	// #endif
+})
+
+// QQ小程序分享给好友
+function onShareAppMessage() {
+	return {
+		title: 'Koishi 插件市场 - 浏览和搜索 Koishi 机器人插件',
+		path: '/pages/index/index',
+		imageUrl: '/static/koishi_market_mp.png'  // 分享图片
+	}
+}
+
+// QQ小程序分享到朋友圈/QQ空间
+function onShareTimeline() {
+	return {
+		title: 'Koishi 插件市场',
+		query: ''
+	}
+}
+	
 </script>
 
 <style scoped>
@@ -809,7 +841,7 @@ onUnmounted(() => {
 
 /* 搜索区域包装 */
 ::v-deep .search-header {
-	padding: 60rpx 60rpx 0;
+	padding: 9.9rpx 60rpx 0;
 	background: transparent;
 }
 
@@ -1184,7 +1216,7 @@ onUnmounted(() => {
 	}
 	
 	::v-deep .search-header {
-		padding: 30rpx 20rpx 16rpx;
+		padding: 9.9rpx 20rpx 16rpx;
 	}
 	
 	.content {

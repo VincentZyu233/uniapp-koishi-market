@@ -39,11 +39,22 @@
 </template>
 
 <script setup>
+import { onLoad } from "@dcloudio/uni-app";
 import RichTextParser from '@/components/rich-text-parser/rich-text-parser.vue';
 
 const test1 = '[<ruby>**jrys-prpr**<rp>（</rp><rt>点我查看预览图</rt><rp>）</rp></ruby>](https://i0.hdslb.com/bfs/article/ae33f1b2e9dbc3fe89363a40fbf040703493298333289018.png)😽QQ官方json按钮支持';
 
 const test2 = '[![npm](https://img.shields.io/npm/v/koishi-plugin-noah?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-noah) A tool bot for arcade music games';
+
+onLoad(()=>{
+	// #ifdef MP-QQ
+	console.log("qq小程序的神秘要求捏");
+	qq.showShareMenu({
+		showShareItems: ['qq', 'qzone', 'wechatFriends', 'wechatMoment'],
+		withShareTicket: true,
+	});
+	// #endif
+})
 </script>
 
 <style scoped>

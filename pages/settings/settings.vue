@@ -96,6 +96,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { onLoad } from "@dcloudio/uni-app";
 import { DEFAULT_MARKET_SEARCH_ENDPOINT, fetchMarketData } from '../../utils/request.js'
 // #ifdef MP-WEIXIN || MP-QQ
 import { getStatusBarHeight } from '@/utils/system.js'
@@ -318,6 +319,16 @@ const resetToDefault = () => {
 const goBack = () => {
 	uni.navigateBack()
 }
+
+onLoad(()=>{
+	// #ifdef MP-QQ
+	console.log("qq小程序的神秘要求捏");
+	qq.showShareMenu({
+		showShareItems: ['qq', 'qzone', 'wechatFriends', 'wechatMoment'],
+		withShareTicket: true,
+	});
+	// #endif
+})
 </script>
 
 <style scoped>

@@ -202,6 +202,7 @@
 					</view>
 				</view>
 				
+				<!-- #ifdef WEB -->
 				<!-- 链接信息 -->
 				<view class="section" v-if="plugin._raw?.package?.links">
 					<view class="section-title">🔗 相关链接</view>
@@ -228,6 +229,7 @@
 						</view>
 					</view>
 				</view>
+				<!-- #endif -->
 				
 				<!-- 时间信息 -->
 				<view class="section">
@@ -468,6 +470,16 @@ const copyLink = (url) => {
 		}
 	});
 };
+
+onLoad(()=>{
+	// #ifdef MP-QQ
+	console.log("qq小程序的神秘要求捏");
+	qq.showShareMenu({
+		showShareItems: ['qq', 'qzone', 'wechatFriends', 'wechatMoment'],
+		withShareTicket: true,
+	});
+	// #endif
+})
 </script>
 
 <style lang="scss" scoped>
