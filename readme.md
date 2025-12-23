@@ -5,7 +5,8 @@
 https://vincentzyu233.github.io/uniapp-koishi-market/#/
 
 ### qq小程序
-搜索：*koishi的npm插件*
+搜索：*koishi的npm插件*  
+
 https://m.q.qq.com/a/s/780e4930897b10f165367ddcd6b46c16
 
 #### made by uniapp:
