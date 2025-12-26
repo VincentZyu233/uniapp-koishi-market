@@ -38,7 +38,10 @@
 					</view>
 					<view class="plugin-basic-info">
 						<view class="plugin-name">{{ plugin.shortname || plugin.name }}</view>
-						<view class="plugin-package">@{{ plugin._raw?.package?.name || plugin.name }}</view>
+						<view class="plugin-package clickable" @click="copyNpmPackageLink">
+							<text>@{{ plugin._raw?.package?.name || plugin.name }}</text>
+							<text class="copy-hint">📋</text>
+						</view>
 						<view class="plugin-author" v-if="plugin.author">
 							<text class="author-icon">👤</text>
 							<text>{{ plugin.author }}</text>
@@ -130,7 +133,7 @@
 				<!-- 发布者信息 -->
 				<view class="section" v-if="plugin._raw?.package?.publisher">
 					<view class="section-title">👤 发布者</view>
-					<view class="publisher-card">
+					<view class="publisher-card clickable" @click="copyNpmAuthorLink(plugin._raw.package.publisher.username)">
 						<image 
 							class="publisher-avatar"
 							:src="getAvatarUrl(plugin._raw.package.publisher.email)" 
@@ -140,6 +143,7 @@
 							<text class="publisher-name">{{ plugin._raw.package.publisher.username }}</text>
 							<text class="publisher-email">{{ plugin._raw.package.publisher.email }}</text>
 						</view>
+						<text class="copy-hint">📋</text>
 					</view>
 				</view>
 				
@@ -147,7 +151,7 @@
 				<view class="section" v-if="plugin._raw?.package?.maintainers?.length">
 					<view class="section-title">🛠️ 维护者 ({{ plugin._raw.package.maintainers.length }})</view>
 					<view class="maintainers-list">
-						<view class="maintainer-card" v-for="(maintainer, index) in plugin._raw.package.maintainers" :key="index">
+						<view class="maintainer-card clickable" v-for="(maintainer, index) in plugin._raw.package.maintainers" :key="index" @click="copyNpmAuthorLink(maintainer.username)">
 							<image 
 								class="maintainer-avatar"
 								:src="getAvatarUrl(maintainer.email)" 
@@ -157,6 +161,7 @@
 								<text class="maintainer-name">{{ maintainer.username }}</text>
 								<text class="maintainer-email">{{ maintainer.email }}</text>
 							</view>
+							<text class="copy-hint">📋</text>
 						</view>
 					</view>
 				</view>
@@ -471,6 +476,27 @@ const copyLink = (url) => {
 	});
 };
 
+// 复制 npm 包链接
+const copyNpmPackageLink = () => {
+	const packageName = plugin.value._raw?.package?.name || plugin.value.name;
+	const npmUrl = `https://www.npmjs.com/package/${packageName}`;
+	copyLink(npmUrl);
+};
+
+// 复制 npm 作者主页链接
+const copyNpmAuthorLink = (username) => {
+	if (!username) {
+		uni.showToast({
+			title: '用户名不存在',
+			icon: 'none',
+			duration: 1500
+		});
+		return;
+	}
+	const npmAuthorUrl = `https://www.npmjs.com/~${username}`;
+	copyLink(npmAuthorUrl);
+};
+
 onLoad(()=>{
 	// #ifdef MP-QQ
 	console.log("qq小程序的神秘要求捏");
@@ -672,6 +698,9 @@ onLoad(()=>{
 	color: var(--text-secondary);
 	word-break: break-word;
 	margin-bottom: 8rpx;
+	display: flex;
+	align-items: center;
+	gap: 8rpx;
 }
 
 .plugin-author {
@@ -684,6 +713,27 @@ onLoad(()=>{
 
 .author-icon {
 	font-size: 24rpx;
+}
+
+/* 可点击元素样式 */
+.clickable {
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+.clickable:hover {
+	opacity: 0.85;
+}
+
+.clickable:active {
+	transform: scale(0.98);
+	opacity: 0.7;
+}
+
+.copy-hint {
+	font-size: 24rpx;
+	opacity: 0.6;
+	margin-left: auto;
 }
 
 /* 区块样式 */
